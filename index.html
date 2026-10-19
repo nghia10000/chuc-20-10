@@ -100,11 +100,14 @@ input {
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
+.gate { transition: opacity 0.6s ease; }
+.gate.open { opacity: 0; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .gate { transition: none; } }
+.gate { cursor: pointer; }
 .gate-inner { display: grid; gap: 18px; justify-items: center; max-width: 360px; }
 .gate-title { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 28px; line-height: 1.3; margin: 0; text-wrap: balance; }
 .gate-hint { font-size: 13px; color: var(--muted); margin: 0; }
 .player { position: fixed; left: -400px; bottom: 0; width: 220px; height: 220px; pointer-events: none; }
-.card { cursor: pointer; }
 .player.show { position: static; width: 100%; height: auto; aspect-ratio: 16 / 9; pointer-events: auto; border-radius: 12px; overflow: hidden; }
 .player.show iframe { width: 100%; height: 100%; display: block; border: 0; }
 .hint { margin: 0; font-size: 13px; font-weight: 600; color: var(--accent); }
@@ -142,7 +145,7 @@ input {
   <section class="card" aria-live="polite">
     <p class="to" id="to">Gửi em,</p>
     <p class="wish" id="wish"></p>
-    <p class="hint" id="hint">Chạm vào lời chúc để nghe nhạc</p>
+    <p class="hint" id="hint" hidden></p>
     <p class="sign" id="sign" hidden>Yêu em, <strong id="from"></strong></p>
     <div class="actions">
       <button type="button" id="next">Lời chúc khác</button>
@@ -164,6 +167,27 @@ input {
   <p class="foot">Gõ tên người nhận và người gửi để lời chúc đổi theo. Bấm Lời chúc khác để xem thêm.</p>
 </main>
 
+<div class="gate" id="gate" role="button" tabindex="0" aria-label="Nhấp để xem lời chúc">
+  <div class="gate-inner">
+    <p class="label">Ngày Phụ nữ Việt Nam</p>
+    <svg class="flower" viewBox="0 0 120 120" aria-hidden="true">
+      <g class="petals" fill="var(--accent)">
+        <ellipse cx="60" cy="24" rx="13" ry="22" opacity="0.9"/>
+        <ellipse cx="60" cy="24" rx="13" ry="22" opacity="0.8" transform="rotate(45 60 60)"/>
+        <ellipse cx="60" cy="24" rx="13" ry="22" opacity="0.9" transform="rotate(90 60 60)"/>
+        <ellipse cx="60" cy="24" rx="13" ry="22" opacity="0.8" transform="rotate(135 60 60)"/>
+        <ellipse cx="60" cy="24" rx="13" ry="22" opacity="0.9" transform="rotate(180 60 60)"/>
+        <ellipse cx="60" cy="24" rx="13" ry="22" opacity="0.8" transform="rotate(225 60 60)"/>
+        <ellipse cx="60" cy="24" rx="13" ry="22" opacity="0.9" transform="rotate(270 60 60)"/>
+        <ellipse cx="60" cy="24" rx="13" ry="22" opacity="0.8" transform="rotate(315 60 60)"/>
+      </g>
+      <circle cx="60" cy="60" r="14" fill="var(--gold)"/>
+    </svg>
+    <p class="gate-title">Có một lời chúc dành riêng cho em</p>
+    <button type="button" id="open">Nhấp để xem lời chúc</button>
+    <p class="gate-hint">Nhớ bật âm lượng để nghe nhạc.</p>
+  </div>
+</div>
 <button type="button" id="mute" class="mute" hidden>Tắt nhạc</button>
 
 <script>
@@ -266,62 +290,69 @@ input {
     (on ? ctx.resume() : ctx.suspend());
     el("mute").textContent = on ? "Tắt nhạc" : "Bật nhạc";
   }
-  /* Bài hát: trình phát YouTube, bắt đầu từ phút 3:00 (180 giây). Lỗi thì dùng giai điệu hộp nhạc */
-  var VID = "JgTZvDbaTtg", START = 180, yt = null, ytOK = false, fell = false;
-  function showPlayer() {
-    el("player-wrap").className = "player show";
-    el("hint").hidden = false;
-    el("hint").textContent = "Bấm nút phát trong khung video để nghe nhạc";
+  /* Bài hát: YouTube bắt đầu từ phút 3:00 (180 giây). Trình phát ẩn hoàn toàn, không hiện khung video */
+  var VID = "JgTZvDbaTtg", START = 180, frame = null, ytState = -1, fell = false;
+  function ytCmd(func) {
+    try {
+      if (frame && frame.contentWindow) {
+        frame.contentWindow.postMessage(JSON.stringify({ event: "command", func: func, args: "" }), "*");
+      }
+    } catch (e) {}
   }
-  function hidePlayer() {
-    el("player-wrap").className = "player";
-    el("hint").hidden = true;
-  }
+  function setBtn(on) { el("mute").textContent = on ? "Tắt nhạc" : "Bật nhạc"; }
   function fallback() {
-    if (fell || ytOK) return;
+    if (fell) return;
     fell = true;
+    try { frame.remove(); } catch (e) {}
+    frame = null;
     startMusic();
-    el("mute").textContent = "Tắt nhạc";
+    setBtn(true);
   }
-  function loadYT() {
-    window.onYouTubeIframeAPIReady = function () {
-      try {
-        yt = new YT.Player("yt", {
-          videoId: VID, width: "100%", height: "100%",
-          playerVars: { start: START, autoplay: 1, playsinline: 1, rel: 0 },
-          events: {
-            onReady: function (e) {
-              ytOK = true; e.target.playVideo();
-              setTimeout(function () { try { if (yt.getPlayerState() !== 1) showPlayer(); } catch (err) {} }, 2500);
-            },
-            onAutoplayBlocked: function () { showPlayer(); },
-            onError: function () { ytOK = false; fallback(); },
-            onStateChange: function (e) {
-              if (e.data === 1) { el("mute").textContent = "Tắt nhạc"; hidePlayer(); }
-              if (e.data === 2) el("mute").textContent = "Bật nhạc";
-            }
-          }
-        });
-      } catch (err) { fallback(); }
-    };
-    var t = document.createElement("script");
-    t.src = "https://www.youtube.com/iframe_api";
-    t.onerror = fallback;
-    document.head.appendChild(t);
-    setTimeout(function () { if (!ytOK) fallback(); }, 7000);
+  function openYT() {
+    frame = document.createElement("iframe");
+    frame.src = "https://www.youtube.com/embed/" + VID + "?start=" + START +
+      "&autoplay=1&playsinline=1&rel=0&controls=0&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
+    frame.allow = "autoplay; encrypted-media";
+    frame.title = "Nhạc nền";
+    frame.width = 220; frame.height = 220;
+    frame.style.border = "0";
+    frame.addEventListener("load", function () {
+      try { frame.contentWindow.postMessage(JSON.stringify({ event: "listening", id: 1 }), "*"); } catch (e) {}
+    });
+    el("yt").appendChild(frame);
+    setTimeout(function () { if (!fell && ytState !== 1) setBtn(false); }, 3000);
   }
+  window.addEventListener("message", function (e) {
+    if (!frame || e.source !== frame.contentWindow) return;
+    var d = e.data;
+    try { if (typeof d === "string") d = JSON.parse(d); } catch (err) { return; }
+    if (!d) return;
+    if (d.event === "onError") { fallback(); return; }
+    var st = d.event === "onStateChange" ? d.info : (d.info && d.info.playerState);
+    if (typeof st === "number") {
+      ytState = st;
+      if (st === 1) setBtn(true);
+      if (st === 2) setBtn(false);
+    }
+  });
   var started = false;
-  document.querySelector(".card").addEventListener("click", function () {
+  function openGift() {
     if (started) return;
     started = true;
-    el("hint").hidden = true;
+    el("gate").classList.add("open");
+    setTimeout(function () { el("gate").hidden = true; }, 700);
     el("mute").hidden = false;
     unlockAudio();
-    loadYT();
+    openYT();
+  }
+  el("gate").addEventListener("click", openGift);
+  el("gate").addEventListener("keydown", function (e) {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openGift(); }
   });
   el("mute").addEventListener("click", function () {
-    if (ytOK && yt) {
-      if (yt.getPlayerState() === 1) yt.pauseVideo(); else yt.playVideo();
+    if (frame) {
+      if (ytState === 1) { ytCmd("pauseVideo"); setBtn(false); }
+      else { ytCmd("playVideo"); setBtn(true); }
     } else {
       setPlaying(!playing);
     }
