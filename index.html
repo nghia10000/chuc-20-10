@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Lời chúc 20/10</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,500&display=swap">
+<style>
+/* Layout: một cột, chữ 20/10 lớn bên trái, bông hoa xoay nhẹ bên phải, lời chúc ở giữa trang */
+:root {
+  --bg: #fbf2f5;
+  --surface: #ffffff;
+  --fg: #3b1431;
+  --muted: #7d5a73;
+  --accent: #c2185b;
+  --gold: #e29a1f;
+  --line: #ecd5df;
+  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --font-body: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1d0e1a;
+    --surface: #2a1625;
+    --fg: #fbe9f1;
+    --muted: #c9a3b8;
+    --accent: #ff7fae;
+    --gold: #f4b84a;
+    --line: #48304a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1d0e1a;
+  --surface: #2a1625;
+  --fg: #fbe9f1;
+  --muted: #c9a3b8;
+  --accent: #ff7fae;
+  --gold: #f4b84a;
+  --line: #48304a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  padding-block: 32px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 640px; margin: 0 auto; display: grid; gap: 28px; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.top > * { min-width: 0; }
+.label {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); margin: 0;
+}
+.date {
+  font-family: var(--font-display); font-weight: 600;
+  font-size: clamp(88px, 26vw, 148px); line-height: 0.9; letter-spacing: -0.03em;
+  margin: 12px 0 0; color: var(--accent);
+}
+.flower { width: clamp(84px, 24vw, 132px); height: auto; flex: none; }
+.flower .petals { transform-origin: 60px 60px; animation: turn 40s linear infinite; }
+@keyframes turn { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .flower .petals { animation: none; } }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 28px 24px; display: grid; gap: 18px;
+}
+.to { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 24px; margin: 0; overflow-wrap: anywhere; }
+.wish { font-size: 18px; line-height: 1.7; margin: 0; text-wrap: pretty; }
+.sign { margin: 0; color: var(--muted); overflow-wrap: anywhere; }
+.sign strong { color: var(--fg); font-weight: 600; }
+.actions { display: flex; gap: 12px; flex-wrap: wrap; }
+button {
+  font: inherit; font-weight: 600; font-size: 15px; cursor: pointer;
+  padding: 10px 18px; border-radius: 999px; border: 1px solid var(--accent);
+  background: var(--accent); color: var(--bg);
+}
+button.ghost { background: transparent; color: var(--accent); }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.fields > * { min-width: 0; }
+@media (max-width: 480px) { .fields { grid-template-columns: 1fr; } }
+label { display: grid; gap: 6px; font-size: 13px; font-weight: 500; color: var(--muted); }
+input {
+  font: inherit; font-size: 16px; color: var(--fg); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; width: 100%;
+}
+.foot { font-size: 13px; color: var(--muted); margin: 0; }
+.gate {
+  position: fixed; inset: 0; z-index: 20; background: var(--bg);
+  display: grid; place-items: center; text-align: center;
+  padding-block: 24px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.gate-inner { display: grid; gap: 18px; justify-items: center; max-width: 360px; }
+.gate-title { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 28px; line-height: 1.3; margin: 0; text-wrap: balance; }
+.gate-hint { font-size: 13px; color: var(--muted); margin: 0; }
+.player { position: fixed; left: -400px; bottom: 0; width: 220px; height: 220px; pointer-events: none; }
+.card { cursor: pointer; }
+.hint { margin: 0; font-size: 13px; font-weight: 600; color: var(--accent); }
+.mute {
+  position: fixed; z-index: 10;
+  right: max(16px, env(safe-area-inset-right, 0px));
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  background: var(--surface); color: var(--accent);
+}
+</style>
+</head>
+<body>
+
+<main>
+  <div class="top">
+    <div>
+      <p class="label">Ngày Phụ nữ Việt Nam</p>
+      <h1 class="date">20/10</h1>
+    </div>
+    <svg class="flower" viewBox="0 0 120 120" aria-hidden="true">
+      <g class="petals" fill="var(--accent)">
+        <ellipse cx="60" cy="24" rx="13" ry="22" opacity="0.9"/>
+        <ellipse cx="60" cy="24" rx="13" ry="22" opacity="0.8" transform="rotate(45 60 60)"/>
+        <ellipse cx="60" cy="24" rx="13" ry="22" opacity="0.9" transform="rotate(90 60 60)"/>
+        <ellipse cx="60" cy="24" rx="13" ry="22" opacity="0.8" transform="rotate(135 60 60)"/>
+        <ellipse cx="60" cy="24" rx="13" ry="22" opacity="0.9" transform="rotate(180 60 60)"/>
+        <ellipse cx="60" cy="24" rx="13" ry="22" opacity="0.8" transform="rotate(225 60 60)"/>
+        <ellipse cx="60" cy="24" rx="13" ry="22" opacity="0.9" transform="rotate(270 60 60)"/>
+        <ellipse cx="60" cy="24" rx="13" ry="22" opacity="0.8" transform="rotate(315 60 60)"/>
+      </g>
+      <circle cx="60" cy="60" r="14" fill="var(--gold)"/>
+    </svg>
+  </div>
+
+  <section class="card" aria-live="polite">
+    <p class="to" id="to">Gửi em,</p>
+    <p class="wish" id="wish"></p>
+    <p class="hint" id="hint">Chạm vào lời chúc để nghe nhạc</p>
+    <p class="sign" id="sign" hidden>Yêu em, <strong id="from"></strong></p>
+    <div class="actions">
+      <button type="button" id="next">Lời chúc khác</button>
+      <button type="button" id="copy" class="ghost">Sao chép lời chúc</button>
+    </div>
+  </section>
+
+  <section class="fields">
+    <label for="name">Người nhận
+      <input id="name" type="text" placeholder="Ví dụ: em, Linh, bé yêu" maxlength="40" autocomplete="off">
+    </label>
+    <label for="sender">Người gửi
+      <input id="sender" type="text" placeholder="Ví dụ: anh, Nam" maxlength="40" autocomplete="off">
+    </label>
+  </section>
+
+  <div class="player" id="player-wrap" aria-hidden="true"><div id="yt"></div></div>
+
+  <p class="foot">Gõ tên người nhận và người gửi để lời chúc đổi theo. Bấm Lời chúc khác để xem thêm.</p>
+</main>
+
+<button type="button" id="mute" class="mute" hidden>Tắt nhạc</button>
+
+<script>
+(function () {
+  var wishes = [
+    "Chúc mừng ngày 20/10, người anh thương nhất. Cảm ơn em vì đã ở bên anh những ngày vui lẫn những ngày mệt. Mong em luôn khỏe, luôn cười thật tươi, và để anh được chăm sóc em thật lâu.",
+    "Hôm nay là ngày của em. Anh chỉ muốn nói rằng có em, những điều bình thường nhất cũng trở nên đáng nhớ. Chúc em một ngày 20/10 thật nhiều hoa và nhiều niềm vui.",
+    "Chúc em xinh đẹp theo cách của riêng em, tự tin với mọi dự định và luôn nhớ rằng phía sau em luôn có một người sẵn sàng cổ vũ. Anh yêu em.",
+    "Cảm ơn em đã kiên nhẫn với anh, đã lắng nghe và đã thương anh. Chúc em nghỉ ngơi thật nhiều, ăn món em thích và được yêu chiều đúng như em xứng đáng.",
+    "Mùa thu năm nay có em là đẹp nhất. Chúc em một ngày 20/10 êm dịu, công việc thuận lợi và trái tim luôn bình yên. Mình cùng đi tiếp nhé."
+  ];
+  var i = 0;
+  var el = function (id) { return document.getElementById(id); };
+  var nameIn = el("name"), fromIn = el("sender");
+
+  function render() {
+    var n = nameIn.value.trim();
+    var f = fromIn.value.trim();
+    el("to").textContent = "Gửi " + (n || "em") + ",";
+    el("wish").textContent = wishes[i];
+    el("from").textContent = f;
+    el("sign").hidden = !f;
+  }
+  function fullText() {
+    var n = nameIn.value.trim(), f = fromIn.value.trim();
+    return "Gửi " + (n || "em") + ",\n" + wishes[i] + (f ? "\nThân gửi, " + f : "");
+  }
+
+  nameIn.addEventListener("input", render);
+  fromIn.addEventListener("input", render);
+  el("next").addEventListener("click", function () {
+    i = (i + 1) % wishes.length;
+    render();
+  });
+  el("copy").addEventListener("click", function () {
+    var btn = el("copy");
+    var done = function (msg) {
+      btn.textContent = msg;
+      setTimeout(function () { btn.textContent = "Sao chép lời chúc"; }, 1800);
+    };
+    try {
+      navigator.clipboard.writeText(fullText()).then(
+        function () { done("Đã sao chép"); },
+        function () { done("Chọn và sao chép thủ công"); }
+      );
+    } catch (e) { done("Chọn và sao chép thủ công"); }
+  });
+
+  /* Nhạc: giai điệu hộp nhạc tự tạo bằng Web Audio, lặp vô hạn */
+  var ctx = null, timer = null, step = 0, nextT = 0, playing = false;
+  var bars = [
+    {b: 130.81, m: [659.25, 783.99, 1046.5, 783.99, 659.25, 783.99, 1046.5, 0]},
+    {b: 110.0,  m: [659.25, 880.0, 1046.5, 880.0, 659.25, 880.0, 1046.5, 0]},
+    {b: 87.31,  m: [698.46, 880.0, 1046.5, 880.0, 698.46, 880.0, 1046.5, 0]},
+    {b: 98.0,   m: [587.33, 783.99, 987.77, 783.99, 587.33, 783.99, 987.77, 0]}
+  ];
+  var stepLen = 60 / 76 / 2;
+  function tone(freq, t, dur, vol, type) {
+    var o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + dur + 0.05);
+  }
+  var master;
+  function schedule() {
+    while (nextT < ctx.currentTime + 0.3) {
+      var bar = bars[Math.floor(step / 8) % bars.length], k = step % 8;
+      if (bar.m[k]) tone(bar.m[k], nextT, 1.2, 0.16, "triangle");
+      if (k === 0) tone(bar.b, nextT, 2.2, 0.22, "sine");
+      nextT += stepLen; step++;
+    }
+  }
+  function startMusic() {
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      ctx = new AC();
+      master = ctx.createGain(); master.gain.value = 0.5; master.connect(ctx.destination);
+      nextT = ctx.currentTime + 0.1;
+      timer = setInterval(schedule, 100);
+      playing = true;
+    } catch (e) {}
+  }
+  function setPlaying(on) {
+    if (!ctx) return;
+    playing = on;
+    (on ? ctx.resume() : ctx.suspend());
+    el("mute").textContent = on ? "Tắt nhạc" : "Bật nhạc";
+  }
+  /* Bài hát: trình phát YouTube, bắt đầu từ phút 3:00 (180 giây). Lỗi thì dùng giai điệu hộp nhạc */
+  var VID = "JgTZvDbaTtg", START = 180, yt = null, ytOK = false, fell = false;
+  function fallback() {
+    if (fell || ytOK) return;
+    fell = true;
+    startMusic();
+    el("mute").textContent = "Tắt nhạc";
+  }
+  function loadYT() {
+    window.onYouTubeIframeAPIReady = function () {
+      try {
+        yt = new YT.Player("yt", {
+          videoId: VID, width: "100%", height: "100%",
+          playerVars: { start: START, autoplay: 1, playsinline: 1, rel: 0 },
+          events: {
+            onReady: function (e) { ytOK = true; e.target.playVideo(); },
+            onError: function () { ytOK = false; fallback(); },
+            onStateChange: function (e) {
+              if (e.data === 1) el("mute").textContent = "Tắt nhạc";
+              if (e.data === 2) el("mute").textContent = "Bật nhạc";
+            }
+          }
+        });
+      } catch (err) { fallback(); }
+    };
+    var t = document.createElement("script");
+    t.src = "https://www.youtube.com/iframe_api";
+    t.onerror = fallback;
+    document.head.appendChild(t);
+    setTimeout(function () { if (!ytOK) fallback(); }, 7000);
+  }
+  var started = false;
+  document.querySelector(".card").addEventListener("click", function () {
+    if (started) return;
+    started = true;
+    el("hint").hidden = true;
+    el("mute").hidden = false;
+    loadYT();
+  });
+  el("mute").addEventListener("click", function () {
+    if (ytOK && yt) {
+      if (yt.getPlayerState() === 1) yt.pauseVideo(); else yt.playVideo();
+    } else {
+      setPlaying(!playing);
+    }
+  });
+
+  render();
+})();
+</script>
+
+</body>
+</html>
