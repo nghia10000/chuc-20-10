@@ -149,22 +149,10 @@ input {
     <p class="sign" id="sign" hidden>Yêu em, <strong id="from"></strong></p>
     <div class="actions">
       <button type="button" id="next">Lời chúc khác</button>
-      <button type="button" id="copy" class="ghost">Sao chép lời chúc</button>
     </div>
   </section>
 
-  <section class="fields">
-    <label for="name">Người nhận
-      <input id="name" type="text" placeholder="Ví dụ: em, Linh, bé yêu" maxlength="40" autocomplete="off">
-    </label>
-    <label for="sender">Người gửi
-      <input id="sender" type="text" placeholder="Ví dụ: anh, Nam" maxlength="40" autocomplete="off">
-    </label>
-  </section>
-
   <div class="player" id="player-wrap" aria-hidden="true"><div id="yt"></div></div>
-
-  <p class="foot">Gõ tên người nhận và người gửi để lời chúc đổi theo. Bấm Lời chúc khác để xem thêm.</p>
 </main>
 
 <div class="gate" id="gate" role="button" tabindex="0" aria-label="Nhấp để xem lời chúc">
@@ -201,7 +189,7 @@ input {
   ];
   var i = 0;
   var el = function (id) { return document.getElementById(id); };
-  var nameIn = el("name"), fromIn = el("sender");
+  var nameIn = { value: "" }, fromIn = { value: "" };
 
   function render() {
     var n = nameIn.value.trim();
@@ -211,29 +199,10 @@ input {
     el("from").textContent = f;
     el("sign").hidden = !f;
   }
-  function fullText() {
-    var n = nameIn.value.trim(), f = fromIn.value.trim();
-    return "Gửi " + (n || "em") + ",\n" + wishes[i] + (f ? "\nThân gửi, " + f : "");
-  }
 
-  nameIn.addEventListener("input", render);
-  fromIn.addEventListener("input", render);
   el("next").addEventListener("click", function () {
     i = (i + 1) % wishes.length;
     render();
-  });
-  el("copy").addEventListener("click", function () {
-    var btn = el("copy");
-    var done = function (msg) {
-      btn.textContent = msg;
-      setTimeout(function () { btn.textContent = "Sao chép lời chúc"; }, 1800);
-    };
-    try {
-      navigator.clipboard.writeText(fullText()).then(
-        function () { done("Đã sao chép"); },
-        function () { done("Chọn và sao chép thủ công"); }
-      );
-    } catch (e) { done("Chọn và sao chép thủ công"); }
   });
 
   /* Nhạc: giai điệu hộp nhạc tự tạo bằng Web Audio, lặp vô hạn */
