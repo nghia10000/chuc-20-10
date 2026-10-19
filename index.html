@@ -105,6 +105,8 @@ input {
 .gate-hint { font-size: 13px; color: var(--muted); margin: 0; }
 .player { position: fixed; left: -400px; bottom: 0; width: 220px; height: 220px; pointer-events: none; }
 .card { cursor: pointer; }
+.player.show { position: static; width: 100%; height: auto; aspect-ratio: 16 / 9; pointer-events: auto; border-radius: 12px; overflow: hidden; }
+.player.show iframe { width: 100%; height: 100%; display: block; border: 0; }
 .hint { margin: 0; font-size: 13px; font-weight: 600; color: var(--accent); }
 .mute {
   position: fixed; z-index: 10;
@@ -241,11 +243,21 @@ input {
     try {
       var AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return;
-      ctx = new AC();
-      master = ctx.createGain(); master.gain.value = 0.5; master.connect(ctx.destination);
+      if (!ctx) ctx = new AC();
+      if (!master) { master = ctx.createGain(); master.gain.value = 0.5; master.connect(ctx.destination); }
+      ctx.resume();
       nextT = ctx.currentTime + 0.1;
       timer = setInterval(schedule, 100);
       playing = true;
+    } catch (e) {}
+  }
+  function unlockAudio() {
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC || ctx) return;
+      ctx = new AC();
+      master = ctx.createGain(); master.gain.value = 0.5; master.connect(ctx.destination);
+      ctx.resume();
     } catch (e) {}
   }
   function setPlaying(on) {
@@ -256,6 +268,15 @@ input {
   }
   /* Bài hát: trình phát YouTube, bắt đầu từ phút 3:00 (180 giây). Lỗi thì dùng giai điệu hộp nhạc */
   var VID = "JgTZvDbaTtg", START = 180, yt = null, ytOK = false, fell = false;
+  function showPlayer() {
+    el("player-wrap").className = "player show";
+    el("hint").hidden = false;
+    el("hint").textContent = "Bấm nút phát trong khung video để nghe nhạc";
+  }
+  function hidePlayer() {
+    el("player-wrap").className = "player";
+    el("hint").hidden = true;
+  }
   function fallback() {
     if (fell || ytOK) return;
     fell = true;
@@ -269,10 +290,14 @@ input {
           videoId: VID, width: "100%", height: "100%",
           playerVars: { start: START, autoplay: 1, playsinline: 1, rel: 0 },
           events: {
-            onReady: function (e) { ytOK = true; e.target.playVideo(); },
+            onReady: function (e) {
+              ytOK = true; e.target.playVideo();
+              setTimeout(function () { try { if (yt.getPlayerState() !== 1) showPlayer(); } catch (err) {} }, 2500);
+            },
+            onAutoplayBlocked: function () { showPlayer(); },
             onError: function () { ytOK = false; fallback(); },
             onStateChange: function (e) {
-              if (e.data === 1) el("mute").textContent = "Tắt nhạc";
+              if (e.data === 1) { el("mute").textContent = "Tắt nhạc"; hidePlayer(); }
               if (e.data === 2) el("mute").textContent = "Bật nhạc";
             }
           }
@@ -291,6 +316,7 @@ input {
     started = true;
     el("hint").hidden = true;
     el("mute").hidden = false;
+    unlockAudio();
     loadYT();
   });
   el("mute").addEventListener("click", function () {
