@@ -108,6 +108,7 @@ input {
 .gate-title { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 28px; line-height: 1.3; margin: 0; text-wrap: balance; }
 .gate-hint { font-size: 13px; color: var(--muted); margin: 0; }
 .player { position: fixed; left: -400px; bottom: 0; width: 220px; height: 220px; pointer-events: none; }
+.player.cover { left: 0; top: 0; bottom: auto; width: 100%; height: 100%; opacity: 0.01; pointer-events: auto; z-index: 30; }
 .player.show { position: static; width: 100%; height: auto; aspect-ratio: 16 / 9; pointer-events: auto; border-radius: 12px; overflow: hidden; }
 .player.show iframe { width: 100%; height: 100%; display: block; border: 0; }
 .hint { margin: 0; font-size: 13px; font-weight: 600; color: var(--accent); }
@@ -259,8 +260,8 @@ input {
     (on ? ctx.resume() : ctx.suspend());
     el("mute").textContent = on ? "Tắt nhạc" : "Bật nhạc";
   }
-  /* Bài hát: YouTube bắt đầu từ phút 3:00 (180 giây). Trình phát ẩn hoàn toàn, không hiện khung video */
-  var VID = "JgTZvDbaTtg", START = 180, frame = null, ytState = -1, fell = false;
+  /* Bài hát: YouTube từ phút 3:00. Trình phát trong suốt phủ lên màn hình mở đầu, người xem chạm vào là chạm thẳng vào trình phát nên điện thoại cho phép phát tiếng */
+  var VID = "JgTZvDbaTtg", START = 180, frame = null, ytState = -1, fell = false, started = false;
   function ytCmd(func) {
     try {
       if (frame && frame.contentWindow) {
@@ -269,27 +270,38 @@ input {
     } catch (e) {}
   }
   function setBtn(on) { el("mute").textContent = on ? "Tắt nhạc" : "Bật nhạc"; }
+  function revealWish() {
+    if (started) return;
+    started = true;
+    el("player-wrap").className = "player";
+    el("gate").classList.add("open");
+    setTimeout(function () { el("gate").hidden = true; }, 700);
+    el("mute").hidden = false;
+    setTimeout(function () { if (frame && ytState !== 1) setBtn(false); }, 2500);
+  }
   function fallback() {
     if (fell) return;
     fell = true;
     try { frame.remove(); } catch (e) {}
     frame = null;
-    startMusic();
-    setBtn(true);
+    el("player-wrap").className = "player";
   }
-  function openYT() {
+  function openByGate() {
+    if (frame) { ytCmd("playVideo"); revealWish(); return; }
+    unlockAudio(); startMusic(); setBtn(true); revealWish();
+  }
+  function mountYT() {
     frame = document.createElement("iframe");
     frame.src = "https://www.youtube.com/embed/" + VID + "?start=" + START +
-      "&autoplay=1&playsinline=1&rel=0&controls=0&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
+      "&playsinline=1&rel=0&controls=0&modestbranding=1&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
     frame.allow = "autoplay; encrypted-media";
     frame.title = "Nhạc nền";
-    frame.width = 220; frame.height = 220;
-    frame.style.border = "0";
+    frame.style.cssText = "width:100%;height:100%;border:0;display:block";
     frame.addEventListener("load", function () {
       try { frame.contentWindow.postMessage(JSON.stringify({ event: "listening", id: 1 }), "*"); } catch (e) {}
     });
     el("yt").appendChild(frame);
-    setTimeout(function () { if (!fell && ytState !== 1) setBtn(false); }, 3000);
+    el("player-wrap").className = "player cover";
   }
   window.addEventListener("message", function (e) {
     if (!frame || e.source !== frame.contentWindow) return;
@@ -300,23 +312,19 @@ input {
     var st = d.event === "onStateChange" ? d.info : (d.info && d.info.playerState);
     if (typeof st === "number") {
       ytState = st;
-      if (st === 1) setBtn(true);
+      if (st === 1) { setBtn(true); revealWish(); }
       if (st === 2) setBtn(false);
     }
   });
-  var started = false;
-  function openGift() {
-    if (started) return;
-    started = true;
-    el("gate").classList.add("open");
-    setTimeout(function () { el("gate").hidden = true; }, 700);
-    el("mute").hidden = false;
-    unlockAudio();
-    openYT();
-  }
-  el("gate").addEventListener("click", openGift);
+  /* Dự phòng: chạm vào trình phát làm cửa sổ mất focus, thì vẫn mở lời chúc sau một chút */
+  window.addEventListener("blur", function () {
+    if (frame && !started && document.activeElement === frame) {
+      setTimeout(revealWish, 1200);
+    }
+  });
+  el("gate").addEventListener("click", openByGate);
   el("gate").addEventListener("keydown", function (e) {
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openGift(); }
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openByGate(); }
   });
   el("mute").addEventListener("click", function () {
     if (frame) {
@@ -326,6 +334,7 @@ input {
       setPlaying(!playing);
     }
   });
+  mountYT();
 
   render();
 })();
