@@ -107,11 +107,13 @@ input {
 .gate-inner { display: grid; gap: 18px; justify-items: center; max-width: 360px; }
 .gate-title { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 28px; line-height: 1.3; margin: 0; text-wrap: balance; }
 .gate-hint { font-size: 13px; color: var(--muted); margin: 0; }
-.player { position: fixed; left: -400px; bottom: 0; width: 220px; height: 220px; pointer-events: none; }
-.player.cover { left: 0; top: 0; bottom: auto; width: 100%; height: 100%; opacity: 0.01; pointer-events: auto; z-index: 30; }
-.player.show { position: static; width: 100%; height: auto; aspect-ratio: 16 / 9; pointer-events: auto; border-radius: 12px; overflow: hidden; }
-.player.show iframe { width: 100%; height: 100%; display: block; border: 0; }
-.hint { margin: 0; font-size: 13px; font-weight: 600; color: var(--accent); }
+.music-link {
+  display: inline-flex; align-items: center; justify-content: center;
+  font: inherit; font-weight: 600; font-size: 15px; text-decoration: none;
+  padding: 10px 18px; border-radius: 999px; border: 1px solid var(--accent);
+  background: transparent; color: var(--accent);
+}
+.music-link:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 .mute {
   position: fixed; z-index: 10;
   right: max(16px, env(safe-area-inset-right, 0px));
@@ -146,14 +148,12 @@ input {
   <section class="card" aria-live="polite">
     <p class="to" id="to">Gửi em,</p>
     <p class="wish" id="wish"></p>
-    <p class="hint" id="hint" hidden></p>
     <p class="sign" id="sign" hidden>Yêu em, <strong id="from"></strong></p>
     <div class="actions">
       <button type="button" id="next">Lời chúc khác</button>
+      <a class="music-link" href="https://zingmp3.vn/album/mot-doi-feat-buitruonglinh-Single-14-Casper-Bon-buitruonglinh/CmOAvvbGtUkH.html" target="_blank" rel="noopener noreferrer">Nghe nhạc trên Zing MP3</a>
     </div>
   </section>
-
-  <div class="player" id="player-wrap" aria-hidden="true"><div id="yt"></div></div>
 </main>
 
 <div class="gate" id="gate" role="button" tabindex="0" aria-label="Nhấp để xem lời chúc">
@@ -174,7 +174,7 @@ input {
     </svg>
     <p class="gate-title">Có một lời chúc dành riêng cho em</p>
     <button type="button" id="open">Nhấp để xem lời chúc</button>
-    <p class="gate-hint">Nhớ bật âm lượng để nghe nhạc.</p>
+    <p class="gate-hint">Nhấp để mở lời chúc và bật nhạc nền.</p>
   </div>
 </div>
 <button type="button" id="mute" class="mute" hidden>Tắt nhạc</button>
@@ -236,108 +236,45 @@ input {
   function startMusic() {
     try {
       var AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) return;
+      if (!AC) return false;
       if (!ctx) ctx = new AC();
       if (!master) { master = ctx.createGain(); master.gain.value = 0.5; master.connect(ctx.destination); }
       ctx.resume();
       nextT = ctx.currentTime + 0.1;
+      if (timer) clearInterval(timer);
       timer = setInterval(schedule, 100);
       playing = true;
+      return true;
     } catch (e) {}
-  }
-  function unlockAudio() {
-    try {
-      var AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC || ctx) return;
-      ctx = new AC();
-      master = ctx.createGain(); master.gain.value = 0.5; master.connect(ctx.destination);
-      ctx.resume();
-    } catch (e) {}
+    return false;
   }
   function setPlaying(on) {
     if (!ctx) return;
-    playing = on;
-    (on ? ctx.resume() : ctx.suspend());
+    if (on) {
+      startMusic();
+    } else {
+      if (timer) clearInterval(timer);
+      timer = null;
+      ctx.suspend();
+      playing = false;
+    }
     el("mute").textContent = on ? "Tắt nhạc" : "Bật nhạc";
   }
-  /* Bài hát: YouTube từ phút 3:00. Chạm ô mở quà luôn mở được lời chúc. Nếu điện thoại chặn tự phát, khung video hiện ra để bấm phát một lần */
-  var VID = "JgTZvDbaTtg", START = 180, frame = null, ytState = -1, fell = false, started = false;
-  function ytCmd(func) {
-    try {
-      if (frame && frame.contentWindow) {
-        frame.contentWindow.postMessage(JSON.stringify({ event: "command", func: func, args: "" }), "*");
-      }
-    } catch (e) {}
-  }
-  function setBtn(on) { el("mute").textContent = on ? "Tắt nhạc" : "Bật nhạc"; }
-  function showPlayer() {
-    if (!frame || ytState === 1) return;
-    el("player-wrap").className = "player show";
-    el("player-wrap").removeAttribute("aria-hidden");
-    el("hint").hidden = false;
-    el("hint").textContent = "Bấm nút phát trong khung video để nghe nhạc";
-    setBtn(false);
-  }
-  function hidePlayer() {
-    el("player-wrap").className = "player";
-    el("player-wrap").setAttribute("aria-hidden", "true");
-    el("hint").hidden = true;
-  }
-  function fallback() {
-    if (fell) return;
-    fell = true;
-    try { frame.remove(); } catch (e) {}
-    frame = null;
-    hidePlayer();
-    startMusic();
-    setBtn(true);
-  }
-  function openYT() {
-    frame = document.createElement("iframe");
-    frame.src = "https://www.youtube.com/embed/" + VID + "?start=" + START +
-      "&autoplay=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
-    frame.allow = "autoplay; encrypted-media";
-    frame.title = "Nhạc nền";
-    frame.style.cssText = "width:100%;height:100%;border:0;display:block";
-    frame.addEventListener("load", function () {
-      try { frame.contentWindow.postMessage(JSON.stringify({ event: "listening", id: 1 }), "*"); } catch (e) {}
-    });
-    el("yt").appendChild(frame);
-    setTimeout(showPlayer, 2800);
-  }
-  window.addEventListener("message", function (e) {
-    if (!frame || e.source !== frame.contentWindow) return;
-    var d = e.data;
-    try { if (typeof d === "string") d = JSON.parse(d); } catch (err) { return; }
-    if (!d) return;
-    if (d.event === "onError") { fallback(); return; }
-    var st = d.event === "onStateChange" ? d.info : (d.info && d.info.playerState);
-    if (typeof st === "number") {
-      ytState = st;
-      if (st === 1) { setBtn(true); hidePlayer(); }
-      if (st === 2) setBtn(false);
-    }
-  });
+  var started = false;
   function openGift() {
     if (started) return;
     started = true;
     el("gate").classList.add("open");
     setTimeout(function () { el("gate").hidden = true; }, 700);
     el("mute").hidden = false;
-    unlockAudio();
-    openYT();
+    startMusic();
   }
   el("gate").addEventListener("click", openGift);
   el("gate").addEventListener("keydown", function (e) {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openGift(); }
   });
   el("mute").addEventListener("click", function () {
-    if (frame) {
-      if (ytState === 1) { ytCmd("pauseVideo"); setBtn(false); }
-      else { ytCmd("playVideo"); setBtn(true); }
-    } else {
-      setPlaying(!playing);
-    }
+    setPlaying(!playing);
   });
 
   render();
