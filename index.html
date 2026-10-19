@@ -260,7 +260,7 @@ input {
     (on ? ctx.resume() : ctx.suspend());
     el("mute").textContent = on ? "Tắt nhạc" : "Bật nhạc";
   }
-  /* Bài hát: YouTube từ phút 3:00. Trình phát trong suốt phủ lên màn hình mở đầu, người xem chạm vào là chạm thẳng vào trình phát nên điện thoại cho phép phát tiếng */
+  /* Bài hát: YouTube từ phút 3:00. Chạm ô mở quà luôn mở được lời chúc. Nếu điện thoại chặn tự phát, khung video hiện ra để bấm phát một lần */
   var VID = "JgTZvDbaTtg", START = 180, frame = null, ytState = -1, fell = false, started = false;
   function ytCmd(func) {
     try {
@@ -270,30 +270,32 @@ input {
     } catch (e) {}
   }
   function setBtn(on) { el("mute").textContent = on ? "Tắt nhạc" : "Bật nhạc"; }
-  function revealWish() {
-    if (started) return;
-    started = true;
+  function showPlayer() {
+    if (!frame || ytState === 1) return;
+    el("player-wrap").className = "player show";
+    el("player-wrap").removeAttribute("aria-hidden");
+    el("hint").hidden = false;
+    el("hint").textContent = "Bấm nút phát trong khung video để nghe nhạc";
+    setBtn(false);
+  }
+  function hidePlayer() {
     el("player-wrap").className = "player";
-    el("gate").classList.add("open");
-    setTimeout(function () { el("gate").hidden = true; }, 700);
-    el("mute").hidden = false;
-    setTimeout(function () { if (frame && ytState !== 1) setBtn(false); }, 2500);
+    el("player-wrap").setAttribute("aria-hidden", "true");
+    el("hint").hidden = true;
   }
   function fallback() {
     if (fell) return;
     fell = true;
     try { frame.remove(); } catch (e) {}
     frame = null;
-    el("player-wrap").className = "player";
+    hidePlayer();
+    startMusic();
+    setBtn(true);
   }
-  function openByGate() {
-    if (frame) { ytCmd("playVideo"); revealWish(); return; }
-    unlockAudio(); startMusic(); setBtn(true); revealWish();
-  }
-  function mountYT() {
+  function openYT() {
     frame = document.createElement("iframe");
     frame.src = "https://www.youtube.com/embed/" + VID + "?start=" + START +
-      "&playsinline=1&rel=0&controls=0&modestbranding=1&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
+      "&autoplay=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
     frame.allow = "autoplay; encrypted-media";
     frame.title = "Nhạc nền";
     frame.style.cssText = "width:100%;height:100%;border:0;display:block";
@@ -301,7 +303,7 @@ input {
       try { frame.contentWindow.postMessage(JSON.stringify({ event: "listening", id: 1 }), "*"); } catch (e) {}
     });
     el("yt").appendChild(frame);
-    el("player-wrap").className = "player cover";
+    setTimeout(showPlayer, 2800);
   }
   window.addEventListener("message", function (e) {
     if (!frame || e.source !== frame.contentWindow) return;
@@ -312,19 +314,22 @@ input {
     var st = d.event === "onStateChange" ? d.info : (d.info && d.info.playerState);
     if (typeof st === "number") {
       ytState = st;
-      if (st === 1) { setBtn(true); revealWish(); }
+      if (st === 1) { setBtn(true); hidePlayer(); }
       if (st === 2) setBtn(false);
     }
   });
-  /* Dự phòng: chạm vào trình phát làm cửa sổ mất focus, thì vẫn mở lời chúc sau một chút */
-  window.addEventListener("blur", function () {
-    if (frame && !started && document.activeElement === frame) {
-      setTimeout(revealWish, 1200);
-    }
-  });
-  el("gate").addEventListener("click", openByGate);
+  function openGift() {
+    if (started) return;
+    started = true;
+    el("gate").classList.add("open");
+    setTimeout(function () { el("gate").hidden = true; }, 700);
+    el("mute").hidden = false;
+    unlockAudio();
+    openYT();
+  }
+  el("gate").addEventListener("click", openGift);
   el("gate").addEventListener("keydown", function (e) {
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openByGate(); }
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openGift(); }
   });
   el("mute").addEventListener("click", function () {
     if (frame) {
@@ -334,7 +339,6 @@ input {
       setPlaying(!playing);
     }
   });
-  mountYT();
 
   render();
 })();
