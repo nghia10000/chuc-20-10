@@ -107,19 +107,9 @@ input {
 .gate-inner { display: grid; gap: 18px; justify-items: center; max-width: 360px; }
 .gate-title { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 28px; line-height: 1.3; margin: 0; text-wrap: balance; }
 .gate-hint { font-size: 13px; color: var(--muted); margin: 0; }
-.music-link {
-  display: inline-flex; align-items: center; justify-content: center;
-  font: inherit; font-weight: 600; font-size: 15px; text-decoration: none;
-  padding: 10px 18px; border-radius: 999px; border: 1px solid var(--accent);
-  background: transparent; color: var(--accent);
-}
-.music-link:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
-.mute {
-  position: fixed; z-index: 10;
-  right: max(16px, env(safe-area-inset-right, 0px));
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  background: var(--surface); color: var(--accent);
-}
+.player { width: 100%; height: 275px; border: 0; border-radius: 12px; overflow: hidden; }
+.player iframe { display: block; width: 100%; height: 100%; border: 0; }
+.music-hint { margin: -12px 0 0; color: var(--muted); font-size: 13px; }
 </style>
 </head>
 <body>
@@ -151,9 +141,10 @@ input {
     <p class="sign" id="sign" hidden>Yêu em, <strong id="from"></strong></p>
     <div class="actions">
       <button type="button" id="next">Lời chúc khác</button>
-      <a class="music-link" href="https://zingmp3.vn/album/mot-doi-feat-buitruonglinh-Single-14-Casper-Bon-buitruonglinh/CmOAvvbGtUkH.html" target="_blank" rel="noopener noreferrer">Nghe nhạc trên Zing MP3</a>
     </div>
   </section>
+  <p class="music-hint" id="music-hint" hidden>Chạm vào bài hát trong khung bên dưới để phát nhạc.</p>
+  <div class="player" id="player-wrap" hidden></div>
 </main>
 
 <div class="gate" id="gate" role="button" tabindex="0" aria-label="Nhấp để xem lời chúc">
@@ -174,10 +165,9 @@ input {
     </svg>
     <p class="gate-title">Có một lời chúc dành riêng cho em</p>
     <button type="button" id="open">Nhấp để xem lời chúc</button>
-    <p class="gate-hint">Nhấp để mở lời chúc và bật nhạc nền.</p>
+    <p class="gate-hint">Nhấp để mở lời chúc, rồi chạm phát nhạc trong khung Zing MP3.</p>
   </div>
 </div>
-<button type="button" id="mute" class="mute" hidden>Tắt nhạc</button>
 
 <script>
 (function () {
@@ -206,77 +196,24 @@ input {
     render();
   });
 
-  /* Nhạc: giai điệu hộp nhạc tự tạo bằng Web Audio, lặp vô hạn */
-  var ctx = null, timer = null, step = 0, nextT = 0, playing = false;
-  var bars = [
-    {b: 130.81, m: [659.25, 783.99, 1046.5, 783.99, 659.25, 783.99, 1046.5, 0]},
-    {b: 110.0,  m: [659.25, 880.0, 1046.5, 880.0, 659.25, 880.0, 1046.5, 0]},
-    {b: 87.31,  m: [698.46, 880.0, 1046.5, 880.0, 698.46, 880.0, 1046.5, 0]},
-    {b: 98.0,   m: [587.33, 783.99, 987.77, 783.99, 587.33, 783.99, 987.77, 0]}
-  ];
-  var stepLen = 60 / 76 / 2;
-  function tone(freq, t, dur, vol, type) {
-    var o = ctx.createOscillator(), g = ctx.createGain();
-    o.type = type; o.frequency.value = freq;
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g); g.connect(master);
-    o.start(t); o.stop(t + dur + 0.05);
-  }
-  var master;
-  function schedule() {
-    while (nextT < ctx.currentTime + 0.3) {
-      var bar = bars[Math.floor(step / 8) % bars.length], k = step % 8;
-      if (bar.m[k]) tone(bar.m[k], nextT, 1.2, 0.16, "triangle");
-      if (k === 0) tone(bar.b, nextT, 2.2, 0.22, "sine");
-      nextT += stepLen; step++;
-    }
-  }
-  function startMusic() {
-    try {
-      var AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) return false;
-      if (!ctx) ctx = new AC();
-      if (!master) { master = ctx.createGain(); master.gain.value = 0.5; master.connect(ctx.destination); }
-      ctx.resume();
-      nextT = ctx.currentTime + 0.1;
-      if (timer) clearInterval(timer);
-      timer = setInterval(schedule, 100);
-      playing = true;
-      return true;
-    } catch (e) {}
-    return false;
-  }
-  function setPlaying(on) {
-    if (!ctx) return;
-    if (on) {
-      startMusic();
-    } else {
-      if (timer) clearInterval(timer);
-      timer = null;
-      ctx.suspend();
-      playing = false;
-    }
-    el("mute").textContent = on ? "Tắt nhạc" : "Bật nhạc";
-  }
   var started = false;
   function openGift() {
     if (started) return;
     started = true;
     el("gate").classList.add("open");
     setTimeout(function () { el("gate").hidden = true; }, 700);
-    el("mute").hidden = false;
-    startMusic();
+    var frame = document.createElement("iframe");
+    frame.src = "https://zingmp3.vn/embed/album/CmOAvvbGtUkH";
+    frame.title = "một đời (feat. buitruonglinh) - Zing MP3";
+    frame.allow = "autoplay; encrypted-media";
+    el("player-wrap").appendChild(frame);
+    el("player-wrap").hidden = false;
+    el("music-hint").hidden = false;
   }
   el("gate").addEventListener("click", openGift);
   el("gate").addEventListener("keydown", function (e) {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openGift(); }
   });
-  el("mute").addEventListener("click", function () {
-    setPlaying(!playing);
-  });
-
   render();
 })();
 </script>
